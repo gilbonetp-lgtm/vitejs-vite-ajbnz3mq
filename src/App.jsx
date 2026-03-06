@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
@@ -28,7 +28,7 @@ import {
   XCircle,
   LogOut,
   Lock,
-  CreditCard // Icono para la mútua
+  CreditCard 
 } from 'lucide-react';
 
 // --- TUS CLAVES DE FIREBASE ---
@@ -105,7 +105,7 @@ export default function App() {
     nombrePaciente: '',
     fechaVisita: new Date().toISOString().split('T')[0],
     procedimiento: '',
-    mutua: '', // Nuevo campo
+    mutua: '', 
     medico: ''
   });
 
@@ -189,7 +189,7 @@ export default function App() {
         ...prev,
         nombrePaciente: '',
         procedimiento: '',
-        mutua: '', // Reseteamos la mútua
+        mutua: '',
         medico: currentProfile.role === 'medico' ? currentProfile.name : prev.medico
       }));
       setSuccessMsg('Registro añadido correctamente');
@@ -216,13 +216,12 @@ export default function App() {
       setErrorMsg("No hay registros visibles.");
       return;
     }
-    // Añadida columna Mútua al CSV
     let csvContent = "Nombre Paciente,Fecha Visita,Mutua,Procedimiento,Medico,Fecha Creacion\n";
     filteredRegistros.forEach(reg => {
       const row = [
         `"${reg.nombrePaciente}"`,
         `"${reg.fechaVisita}"`,
-        `"${reg.mutua || ''}"`, // Exportar mútua
+        `"${reg.mutua || ''}"`,
         `"${reg.procedimiento}"`,
         `"${reg.medico}"`,
         `"${reg.createdAt?.toDate ? reg.createdAt.toDate().toLocaleString() : ''}"`
@@ -345,7 +344,28 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pt-2"><button type="submit" disabled={submitting} className={`w-full py-3 rounded-lg font-semibold text-white shadow-md flex justify-center gap-2 ${submitting ? 'bg-slate-400' : currentProfile.role === 'admin' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'}`}>{submitting ? 'Guardando...' : <><Save className="h-5 w-5" /> Registrar Visita</>}</button></div>
+            <div className="pt-4">
+              <button 
+                type="submit" 
+                disabled={submitting} 
+                className={`w-full py-4 rounded-xl font-bold text-lg shadow-md flex items-center justify-center gap-3 transition-all transform hover:scale-[1.01] active:scale-[0.98] ${
+                  submitting 
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                    : currentProfile.role === 'admin' 
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {submitting ? (
+                  <span>Guardando Datos...</span>
+                ) : (
+                  <>
+                    <Save className="h-6 w-6 text-white" /> 
+                    <span className="text-white">Registrar Visita</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </section>
 
