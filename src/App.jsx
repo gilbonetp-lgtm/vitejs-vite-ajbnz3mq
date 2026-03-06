@@ -27,7 +27,8 @@ import {
   AlertCircle,
   XCircle,
   LogOut,
-  Lock
+  Lock,
+  CreditCard // Icono para la mútua
 } from 'lucide-react';
 
 // --- TUS CLAVES DE FIREBASE ---
@@ -55,14 +56,38 @@ const PROCEDIMIENTOS = [
   "Holter TA",
   "Ergometría",
   "Tilt test",
-  "Interconsulta"
+  "Interconsulta",
+  "EEF",
+  "Ablación",
+  "Coronariografía",
+  "Angioplastia",
+  "Cardioversión",
+  "ECOTE"
 ];
 
 const MEDICOS = [
   "Ramón de Castro",
   "Gil Bonet",
   "Mauricio Torres",
-  "Anna Crrasquer"
+  "Anna Crrasquer",
+  "Gabriel Martín",
+  "Roberto Bejarano",
+  "Adel Musa"
+];
+
+const MUTUAS = [
+  "Adeslas",
+  "ASISA",
+  "DKV",
+  "MAPFRE",
+  "Sanitas",
+  "Privado",
+  "AXA",
+  "Fiatc",
+  "Cigna",
+  "Mútua General de Catalunya",
+  "Allianz",
+  "Otra"
 ];
 
 export default function App() {
@@ -80,6 +105,7 @@ export default function App() {
     nombrePaciente: '',
     fechaVisita: new Date().toISOString().split('T')[0],
     procedimiento: '',
+    mutua: '', // Nuevo campo
     medico: ''
   });
 
@@ -162,7 +188,8 @@ export default function App() {
       setFormData(prev => ({
         ...prev,
         nombrePaciente: '',
-        procedimiento: '', 
+        procedimiento: '',
+        mutua: '', // Reseteamos la mútua
         medico: currentProfile.role === 'medico' ? currentProfile.name : prev.medico
       }));
       setSuccessMsg('Registro añadido correctamente');
@@ -189,11 +216,13 @@ export default function App() {
       setErrorMsg("No hay registros visibles.");
       return;
     }
-    let csvContent = "Nombre Paciente,Fecha Visita,Procedimiento,Medico,Fecha Creacion\n";
+    // Añadida columna Mútua al CSV
+    let csvContent = "Nombre Paciente,Fecha Visita,Mutua,Procedimiento,Medico,Fecha Creacion\n";
     filteredRegistros.forEach(reg => {
       const row = [
         `"${reg.nombrePaciente}"`,
         `"${reg.fechaVisita}"`,
+        `"${reg.mutua || ''}"`, // Exportar mútua
         `"${reg.procedimiento}"`,
         `"${reg.medico}"`,
         `"${reg.createdAt?.toDate ? reg.createdAt.toDate().toLocaleString() : ''}"`
@@ -278,10 +307,44 @@ export default function App() {
               <div className="space-y-1.5"><label className="text-sm font-medium text-slate-600 flex gap-1"><User className="h-4 w-4" /> Paciente</label><input type="text" name="nombrePaciente" required placeholder="Nombre y Apellidos" value={formData.nombrePaciente} onChange={handleChange} className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" /></div>
               <div className="space-y-1.5"><label className="text-sm font-medium text-slate-600 flex gap-1"><Calendar className="h-4 w-4" /> Fecha</label><input type="date" name="fechaVisita" required value={formData.fechaVisita} onChange={handleChange} className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" /></div>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-1.5"><label className="text-sm font-medium text-slate-600 flex gap-1"><Stethoscope className="h-4 w-4" /> Procedimiento</label><div className="relative"><select name="procedimiento" required value={formData.procedimiento} onChange={handleChange} className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"><option value="">Seleccionar...</option>{PROCEDIMIENTOS.map(p => <option key={p} value={p}>{p}</option>)}</select></div></div>
-              <div className="space-y-1.5"><label className="text-sm font-medium text-slate-600 flex gap-1"><UserRound className="h-4 w-4" /> Médico</label><div className="relative">{currentProfile.role === 'medico' ? <div className="w-full p-2.5 bg-slate-100 border border-slate-300 rounded-lg text-slate-600 flex gap-2 cursor-not-allowed"><UserRound className="h-4 w-4 opacity-50" />{currentProfile.name}</div> : <select name="medico" required value={formData.medico} onChange={handleChange} className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"><option value="">Seleccionar...</option>{MEDICOS.map(m => <option key={m} value={m}>{m}</option>)}</select>}</div></div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-600 flex gap-1"><CreditCard className="h-4 w-4" /> Mútua</label>
+                <div className="relative">
+                  <select name="mutua" required value={formData.mutua} onChange={handleChange} className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Seleccionar Mútua...</option>
+                    {MUTUAS.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-600 flex gap-1"><Stethoscope className="h-4 w-4" /> Procedimiento</label>
+                <div className="relative">
+                  <select name="procedimiento" required value={formData.procedimiento} onChange={handleChange} className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Seleccionar...</option>
+                    {PROCEDIMIENTOS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-600 flex gap-1"><UserRound className="h-4 w-4" /> Médico</label>
+              <div className="relative">
+                {currentProfile.role === 'medico' ? (
+                  <div className="w-full p-2.5 bg-slate-100 border border-slate-300 rounded-lg text-slate-600 flex gap-2 cursor-not-allowed">
+                    <UserRound className="h-4 w-4 opacity-50" />{currentProfile.name}
+                  </div>
+                ) : (
+                  <select name="medico" required value={formData.medico} onChange={handleChange} className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="">Seleccionar...</option>
+                    {MEDICOS.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                )}
+              </div>
+            </div>
+
             <div className="pt-2"><button type="submit" disabled={submitting} className={`w-full py-3 rounded-lg font-semibold text-white shadow-md flex justify-center gap-2 ${submitting ? 'bg-slate-400' : currentProfile.role === 'admin' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'}`}>{submitting ? 'Guardando...' : <><Save className="h-5 w-5" /> Registrar Visita</>}</button></div>
           </form>
         </section>
@@ -295,8 +358,15 @@ export default function App() {
             {loading ? <div className="text-center py-10 text-slate-400">Cargando...</div> : filteredRegistros.length === 0 ? <div className="text-center py-10 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400">No hay registros.</div> : filteredRegistros.map((reg) => (
               <div key={reg.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between gap-4 hover:shadow-md transition-shadow group">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1"><span className="font-bold text-slate-800 text-lg">{reg.nombrePaciente}</span><span className="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">{reg.fechaVisita}</span></div>
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-600"><span className="flex gap-1 items-center"><Stethoscope className="h-3 w-3" /> {reg.procedimiento}</span>{currentProfile.role === 'admin' && <span className="flex gap-1 items-center text-indigo-600"><UserRound className="h-3 w-3" /> {reg.medico}</span>}</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-slate-800 text-lg">{reg.nombrePaciente}</span>
+                    <span className="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">{reg.fechaVisita}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                    <span className="flex gap-1 items-center font-medium text-slate-700"><CreditCard className="h-3 w-3" /> {reg.mutua}</span>
+                    <span className="flex gap-1 items-center"><Stethoscope className="h-3 w-3" /> {reg.procedimiento}</span>
+                    {currentProfile.role === 'admin' && <span className="flex gap-1 items-center text-indigo-600"><UserRound className="h-3 w-3" /> {reg.medico}</span>}
+                  </div>
                 </div>
                 <div className="self-end sm:self-center">{confirmDeleteId === reg.id ? <div className="flex gap-2 bg-red-50 p-1.5 rounded-lg border border-red-100"><button onClick={() => executeDelete(reg.id)} className="bg-red-500 text-white text-xs px-3 py-1.5 rounded-md">Sí, borrar</button><button onClick={() => setConfirmDeleteId(null)} className="text-slate-500 hover:bg-white p-1 rounded-md"><XCircle className="h-5 w-5" /></button></div> : <button onClick={() => setConfirmDeleteId(reg.id)} className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="h-5 w-5" /></button>}</div>
               </div>
